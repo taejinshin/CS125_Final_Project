@@ -125,6 +125,12 @@ public class MainActivity extends AppCompatActivity {
     private int sec, min, millisecond;
     private boolean resume;
 
+    private File directory = Environment.getExternalStorageDirectory();
+
+    private File recording = new File(directory + "/recording.3gp");
+
+    private File file = new File(directory.getAbsolutePath() + "/FilePath");
+
 
 
     /**
@@ -144,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         stop.setVisibility(View.GONE);
         list.setVisibility(View.VISIBLE);
         handler = new Handler();
-        datapath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
+        datapath = file.getAbsolutePath() + "/recording.3gp";
         String file_path = getApplicationContext().getFilesDir().getPath();
         final File file = new File(file_path);
         recorder = new MediaRecorder();
@@ -168,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException ioe) {
                     Toast.makeText(getApplicationContext(), "Oops. Something went wrong.", Toast.LENGTH_LONG).show();
                 }
-                if (resume == false) {
+                if (!resume) {
                     start = SystemClock.uptimeMillis();
                     handler.postDelayed(runnable, 0);
                     chronometer.start();
@@ -190,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
                 handler.removeCallbacks(runnable);
                 chronometer.stop();
                 savedtime = chronometer.getBase() - SystemClock.elapsedRealtime();
+                final String currenttime = chronometer.getText().toString();
                 millisec = 0L;
                 start = 0L;
                 buff = 0L;
@@ -222,6 +229,8 @@ public class MainActivity extends AppCompatActivity {
 
 
                         Intent intent = new Intent(getApplicationContext(), recordinglist.class);
+                        intent.putExtra("time", currenttime);
+                        intent.putExtra("title", uri);
                         startActivity(intent);
 
 
@@ -244,9 +253,9 @@ public class MainActivity extends AppCompatActivity {
         list.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), recordinglist.class);
+                Intent listintent = new Intent(v.getContext(), recordinglist.class);
 
-                startActivity(intent);
+                startActivity(listintent);
             }
 
         });
@@ -257,11 +266,11 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             millisec = SystemClock.uptimeMillis() - start;
             update = buff + millisec;
-            sec = (int) (update / 100);
+            sec = (int) (update / 1000);
             min = sec/ 60;
             sec = sec % 60;
-            millisec = (int) (update % 100);
-            chronometer.setText(String.format("%02d",min) + ":" + String.format("%02d", sec) + ":" + String.format("%02d", millisec));
+            millisec = (int) (update % 1000);
+            chronometer.setText("" + min + ":" + String.format("%02d", sec) + ":" + String.format("%03d", millisec));
             handler.postDelayed(this, 60);
         }
 

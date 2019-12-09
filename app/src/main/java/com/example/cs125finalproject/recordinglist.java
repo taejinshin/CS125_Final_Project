@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -44,33 +45,40 @@ import android.widget.EditText;
 
 public class recordinglist extends AppCompatActivity {
 
-    private File folder = new File(Environment.getExternalStorageDirectory() + "/SoundRecorder");
+    private File directory = Environment.getExternalStorageDirectory();
 
-    private String datapath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
+    private File recording = new File(directory + "/recording.3gp");
 
+    private File file = new File(directory.getAbsolutePath() + "/FilePath");
 
-
-    private File file = new File(datapath);
-
-    private List<File> entrieslist = new ArrayList<>();
+    private ArrayList<File> entrieslist = new ArrayList<File>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.chunk_recordings);
-        file = getFilesDir();
+        file.mkdirs();
 
+        updateUI();
     }
     public void updateUI() {
-        LinearLayout parent = findViewById(R.id.recordingsList);
-        parent.removeAllViews();
+        Intent intent = getIntent();
+        String recordingtitle = intent.getStringExtra("title");
+        String recordinglength = intent.getStringExtra("time");
 
-        for (final File entries : file.listFiles()) {
+        LinearLayout parent = findViewById(R.id.recordingslist);
+        parent.removeAllViews();
+        File files[] = directory.listFiles();
+        int count = 0;
+        for (final File entries : files) {
+            entrieslist.add(entries);
+
             String name = Recording.getFilename();
             View recordings = getLayoutInflater().inflate(R.layout.chunk_recordings, parent, false);
             TextView title = recordings.findViewById(R.id.recordingtitle);
             title.setText(name);
             TextView length = recordings.findViewById(R.id.timelength);
-            Button play = recordings.findViewById(R.id.play);
+
+            ImageButton play = recordings.findViewById(R.id.play);
             play.setOnClickListener(new View.OnClickListener() {
 
                 public void onClick(View v) {
@@ -86,7 +94,7 @@ public class recordinglist extends AppCompatActivity {
                 }
 
             });
-            Button delete = recordings.findViewById(R.id.delete);
+            ImageButton delete = recordings.findViewById(R.id.delete);
             delete.setOnClickListener(new View.OnClickListener() {
 
                 public void onClick(View v) {
@@ -98,6 +106,7 @@ public class recordinglist extends AppCompatActivity {
 
             });
             parent.addView(recordings);
+            count++;
 
         }
     }
