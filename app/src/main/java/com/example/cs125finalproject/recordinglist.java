@@ -47,7 +47,7 @@ public class recordinglist extends AppCompatActivity {
 
     private File directory = Environment.getExternalStorageDirectory();
 
-    private File recording = new File(directory + "/recording.3gp");
+
 
     private File file = new File(directory.getAbsolutePath() + "/FilePath");
 
@@ -60,11 +60,13 @@ public class recordinglist extends AppCompatActivity {
 
         updateUI();
     }
+
+
     public void updateUI() {
         Intent intent = getIntent();
         String recordingtitle = intent.getStringExtra("title");
         String recordinglength = intent.getStringExtra("time");
-
+        final String recording = file.getAbsolutePath() + "/" + recordingtitle + ".3gp";
         LinearLayout parent = findViewById(R.id.recordingslist);
         parent.removeAllViews();
         File files[] = directory.listFiles();
@@ -85,7 +87,7 @@ public class recordinglist extends AppCompatActivity {
                     //play the recording
                     MediaPlayer mPlayer = new MediaPlayer();
                     try {
-                        mPlayer.setDataSource(Recording.getUri());
+                        mPlayer.setDataSource(recording);
                         mPlayer.prepare();
                         mPlayer.start();
                     } catch (IOException e) {

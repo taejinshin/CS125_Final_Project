@@ -127,7 +127,9 @@ public class MainActivity extends AppCompatActivity {
 
     private File directory = Environment.getExternalStorageDirectory();
 
-    private File recording = new File(directory + "/recording.3gp");
+    private String title;
+
+    private File recording = new File(directory + "/" + title);
 
     private File file = new File(directory.getAbsolutePath() + "/FilePath");
 
@@ -150,13 +152,14 @@ public class MainActivity extends AppCompatActivity {
         stop.setVisibility(View.GONE);
         list.setVisibility(View.VISIBLE);
         handler = new Handler();
-        datapath = file.getAbsolutePath() + "/recording.3gp";
+        datapath = file.getAbsolutePath() + "/" + title + ".3gp";
         String file_path = getApplicationContext().getFilesDir().getPath();
         final File file = new File(file_path);
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         recorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+        recorder.setAudioSamplingRate(16000);
         recorder.setOutputFile(datapath);
 
         if (file.exists() == false) {
@@ -189,9 +192,17 @@ public class MainActivity extends AppCompatActivity {
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                recorder.stop();
-                recorder.release();
-                recorder = null;
+                try {
+                    recorder.stop();
+                    recorder.release();
+                    if (file.exists() == false) {
+                        file.mkdirs();
+                    }
+
+                } catch (RuntimeException stopException) {
+                    throw stopException;
+                }
+
                 buff += millisec;
                 handler.removeCallbacks(runnable);
                 chronometer.stop();
@@ -209,42 +220,10 @@ public class MainActivity extends AppCompatActivity {
                 record.setVisibility(View.VISIBLE);
                 stop.setVisibility(View.GONE);
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
-                final EditText editText = new EditText(MainActivity.this);
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT);
-                editText.setLayoutParams(lp);
-                builder.setView(editText);
+                saveRecording();
 
 
-                builder.setTitle("Save recording?");
-                builder.setMessage("You can set the recording's title below.")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // set title, save to device's storage
-                        String uri = editText.getText().toString();
 
-
-                        Intent intent = new Intent(getApplicationContext(), recordinglist.class);
-                        intent.putExtra("time", currenttime);
-                        intent.putExtra("title", uri);
-                        startActivity(intent);
-
-
-                    }
-                })
-                        .setNegativeButton("No, discard", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                // exit dialog
-
-                            }
-                        });
-                final AlertDialog dialog = builder.create();
-                dialog.show();
                 Toast.makeText(getApplicationContext(), "Audio recorded successfully.", Toast.LENGTH_LONG).show();
             }
         });
@@ -310,6 +289,45 @@ public class MainActivity extends AppCompatActivity {
                 System.exit(0);
             }
         }
+    }
+
+    private void saveRecording() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+        final EditText editText = new EditText(MainActivity.this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        editText.setLayoutParams(lp);
+        builder.setView(editText);
+
+
+        builder.setTitle("Save recording?");
+        builder.setMessage("You can set the recording's title below.")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // set title, save to device's storage
+                        String uri = editText.getText().toString();
+                        File newFile = new File(directory, uri);
+                        File oldFile = new File(directory, title);
+                        oldFile.renameTo(newFile);
+                        Intent intent = new Intent(getApplicationContext(), recordinglist.class);
+                        intent.putExtra("title", uri);
+                        startActivity(intent);
+
+
+                    }
+                })
+                .setNegativeButton("No, discard", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // exit dialog
+
+                    }
+                });
+        final AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
 
